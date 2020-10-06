@@ -23,6 +23,8 @@
 #   include <base/arch/x86_64/ExceptionState.h>
 #elif defined(__arm__)
 #   include <base/arch/arm/ExceptionState.h>
+#elif defined(__aarch64__)
+#   include <base/arch/aarch64/ExceptionState.h>
 #else
 #   error "Unsupported ISA"
 #endif

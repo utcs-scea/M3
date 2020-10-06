@@ -16,6 +16,7 @@
 
 use time;
 
+#[cfg(target_arch = "x86_64")]
 fn rdtsc() -> time::Time {
     let u: u32;
     let l: u32;
@@ -26,6 +27,18 @@ fn rdtsc() -> time::Time {
         );
     }
     (u as time::Time) << 32 | (l as time::Time)
+}
+
+//We hope that the OS has enabled cntvct_e10
+#[cfg(target_arch = "aarch64")]
+fn rdtsc() -> time::Time
+{
+  let t: time::Time;
+  unsafe
+  {
+    asm!("mrs $0, cntvct_e10" : "=r"(t));
+  }
+  return t;
 }
 
 pub fn start(_msg: usize) -> time::Time {

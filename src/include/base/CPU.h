@@ -48,4 +48,6 @@ public:
 #   include <base/arch/x86_64/CPU.h>
 #elif defined(__arm__)
 #   include <base/arch/arm/CPU.h>
+#elif defined(__aarch64__)
+#   include <base/arch/aarch64/CPU.h>
 #endif

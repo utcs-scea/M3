@@ -26,6 +26,8 @@
 #include "exceptions.h"
 #include "fsapi.h"
 
+constexpr long SYS_getdents = SYS_getdents64;
+
 class FSAPI_POSIX : public FSAPI {
     enum { MaxOpenFds = 512 };
 

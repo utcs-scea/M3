@@ -29,7 +29,7 @@ cycles_t Time::stop(unsigned) {
     uint32_t u, l;
     asm volatile ("rdtsc" : "=a" (l), "=d" (u) : : "memory");
     return static_cast<cycles_t>(u) << 32 | l;
-#elif defined(__arm__)
+#elif defined(__arm__) or defined(__aarch64__)
     struct timeval tv;
     gettimeofday(&tv,nullptr);
     return static_cast<cycles_t>(tv.tv_sec) * 1000000 + static_cast<cycles_t>(tv.tv_usec);

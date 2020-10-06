@@ -51,6 +51,29 @@ pub struct Regs {
     rdi: u64,
 }
 
+#[cfg(target_arch = "aarch64")]
+#[derive(Default)]
+#[repr(C, packed)]
+pub struct Regs
+{
+    x0: u64,
+   x19: u64,
+   x20: u64,
+   x21: u64,
+   x22: u64,
+   x23: u64,
+   x24: u64,
+   x25: u64,
+   x26: u64,
+   x27: u64,
+   x28: u64,
+    fp: u64,  //x29
+    lr: u64,  //x30
+    sp: u64,  //x31
+  DAIF: u64,
+  NZCV: u64,
+}
+
 #[cfg(target_arch = "arm")]
 #[derive(Default)]
 #[repr(C, packed)]
@@ -78,6 +101,17 @@ fn thread_init(thread: &mut Thread, func_addr: usize, arg: usize) {
     thread.stack[top_idx] = func_addr;
     thread.regs.rbp = thread.regs.rsp;
     thread.regs.rflags = 0x200;    // enable interrupts
+}
+
+#[cfg(target_arch = "aarch64")]
+fn thread_init(thread: &mut Thread, func_addr: usize, arg: usize) {
+    thread.regs.x0      = arg as u64;                                       // arg
+    let top_idx = thread.stack.len() - 2;
+    thread.regs.  sp    = &thread.stack[top_idx] as *const usize as u64;    // sp
+    thread.regs.  fp    = 0;                                                // fp
+    thread.regs.  lr    = func_addr as u64;                                 // lr
+    thread.regs.DAIF    = 0x0;                                             // Enable interrupts
+    thread.regs.NZCV    = 0x0;                                             // Clear all flags
 }
 
 #[cfg(target_arch = "arm")]
