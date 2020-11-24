@@ -36,6 +36,9 @@ elif target == 'gem5':
     if isa == 'arm':
         rustabi = 'gnueabihf'
         cross = 'arm-none-eabi-'
+    elif isa == 'aarch64':
+        rustabi = 'gnueabihf'
+        cross = 'aarch64-none-elf-'
     else:
         rustabi = 'gnu'
         cross = ''
@@ -150,6 +153,11 @@ else:
             # IRQ handlers since applications run in privileged mode.
             env.Append(CFLAGS = ' -mno-red-zone')
             env.Append(CXXFLAGS = ' -mno-red-zone')
+        elif isa == 'aarch64':
+            env.Append(CFLAGS = ' -march=armv8-a')
+            env.Append(CXXFLAGS = ' -march=armv8-a')
+            env.Append(LINKFLAGS = ' -march=armv8-a')
+            env.Append(ASFLAGS = ' -march=armv8-a')
         else:
             env.Append(CFLAGS = ' -march=armv7-a')
             env.Append(CXXFLAGS = ' -march=armv7-a')

@@ -24,7 +24,9 @@ elif [ "$M3_TARGET" = "t2" ]; then
     M3_ISA='xtensa'
 elif [ "$M3_TARGET" = "gem5" ]; then
     if [ "$M3_ISA" != "arm" ]; then
+      if [ "$M3_ISA" != "aarch64" ]; then
         M3_ISA='x86_64'
+      fi
     fi
 else
     M3_ISA=`uname -m`
@@ -39,6 +41,8 @@ if [ "$M3_TARGET" = "host" ] || [ "$M3_TARGET" = "gem5" ]; then
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$build/bin"
     if [ "$M3_ISA" = "arm" ]; then
         crossprefix='arm-none-eabi-'
+    elif [ "$M3_ISA" = "aarch64" ]; then
+        crossprefix='aarch64-none-eabi-'
     else
         crossprefix=''
     fi
