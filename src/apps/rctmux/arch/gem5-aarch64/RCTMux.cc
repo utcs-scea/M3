@@ -61,7 +61,7 @@ static void *isr_null(m3::Exceptions::State *state) {
 EXTERN_C void exc_handler(m3::Exceptions::State *state) {
     // repeat last instruction, except for SWIs
     if(state->vector != 2)
-        state->pc -= 4;
+        state->pc -= 8;
     isrs[state->vector](state);
 }
 
@@ -76,10 +76,10 @@ void init() {
 void wait_for_reset() {
     asm volatile (
         // set idle stack and enable interrupts
-        "ldr     sp, =idle_stack;\n"
-        "mrs     r0, CPSR;\n"
-        "bic     r0, #1 << 7;\n"
-        "msr     CPSR, r0;\n"
+        "ldr      sp, =idle_stack;\n"
+        "mrs      x0,DAIF;\n"
+        "bic      x0, #1 << 7;\n"
+        "msr    DAIF,  x0;\n"
     );
     while(1)
         m3::DTU::get().sleep();
