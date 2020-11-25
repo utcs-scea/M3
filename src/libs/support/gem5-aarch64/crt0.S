@@ -34,7 +34,8 @@ BEGIN_FUNC(_start)
     msr     sctlr_el1, x4
 
     // set default stack pointer?
-    mov      x0, #0xDEADBEE0
+    //mov      x0, #0xDEADBEE0
+    mov      x0, #0xFFFFFFFFFFFFFFFF
     cmp      x1,  x0
     beq      1f
     mov      sp, #(STACK_TOP - 16)
