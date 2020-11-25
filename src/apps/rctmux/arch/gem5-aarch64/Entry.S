@@ -78,7 +78,7 @@ BEGIN_FUNC(entry_\no)
     // save the vector number
     mov     lr, #\no
     str     lr, [sp, #8]
-    // save SPRS (old CPRS)
+    // save SPSR (old CPRS)
     mrs     lr, SPSR_el1
     str     lr, [sp, #16]
 
