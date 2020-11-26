@@ -41,7 +41,7 @@ inline void CPU::write8b(uintptr_t addr, uint64_t val) {
 inline word_t CPU::get_sp() {
     word_t val;
     asm volatile (
-        "mov %0, x31;"
+        "mov %0,  sp;"
         : "=r" (val)
     );
     return val;
@@ -49,7 +49,7 @@ inline word_t CPU::get_sp() {
 
 inline void CPU::jumpto(uintptr_t addr) {
     asm volatile (
-        "blx %0"
+        "bl %0"
         :
         : "r"(addr)
     );
@@ -68,7 +68,7 @@ inline void CPU::compute(cycles_t cycles) {
 
 inline void CPU::memory_barrier() {
     asm volatile (
-        "dmb"
+        "dmb sy"
         :
         :
         : "memory"
