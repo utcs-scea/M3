@@ -24,7 +24,7 @@ BEGIN_FUNC(_start)
     mrs      x5, mair_el1 // We grab the NMRR:PRRR
     orr      x5,  x5, #0x00000002 // set tr0 = 0x2 (normal memory)
     orr      x5,  x5, #0x0000000100000000 // set ir0 = 0x1 (write-back, write-allocate)
-    orr      x0,  x5, #0x0001000000000000 // set or0 = 0x1 (write-back, write-allocate)
+    orr      x5,  x5, #0x0001000000000000 // set or0 = 0x1 (write-back, write-allocate)
     msr     mair_el1, x5 // Set it back into the register
 
     mrs      x4, sctlr_el1 // We grab sctrl
