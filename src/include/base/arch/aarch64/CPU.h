@@ -49,7 +49,7 @@ inline word_t CPU::get_sp() {
 
 inline void CPU::jumpto(uintptr_t addr) {
     asm volatile (
-        "bl %0"
+        "blr %0"
         :
         : "r"(addr)
     );
