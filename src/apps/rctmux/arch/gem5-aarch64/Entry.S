@@ -75,13 +75,17 @@ current_el1:
     msr    VBAR_EL1, xzr
     msr    DAIF, xzr
 
-    // start idling
+    // Move idling to the link register
     //ldr     lr, =idle
-    adrp     lr, idle
-    add      lr,  lr, :lo12:idle
+    adrp      lr, idle
+    add       lr,  lr, :lo12:idle
 
+    //Move the link register to prep for eret
+    msr  ELR_EL1,  lr
+    //Prepare to enter user mode for eret
+    msr SPSR_EL1, xzr
 
-    ret
+    eret
 END_FUNC(_start)
 
 BEGIN_FUNC(idle)
@@ -100,23 +104,17 @@ BEGIN_FUNC(entry_\no)
 
     adrp    x29, _tmp
     add     x29, x29, :lo12:_tmp
+    mrs     lr, ELR_EL1
     str     lr, [x29]
     // save the vector number
     mov     lr, #\no
     str     lr, [x29, #8]
     // save SPSR (old CPRS)
-    mrs     lr, SPSR_el1
+    mrs     lr, SPSR_EL1
     str     lr, [x29, #16]
-
-    // switch back to supervisor mode
-    //mrs     sp, CPSR
-    //bic     sp, #0x1F
-    //orr     sp, sp, #0x13
-    //msr     CPSR, sp
 
 .if \no == 1
     // use the application's stack; leave one slot for the pc
-    sub     sp, x29, #16
 .else
     // use our own stack
     //ldr     sp, =rctmux_stack
@@ -138,45 +136,43 @@ BUILD_ENTRY 4
 
 BEGIN_FUNC(exc_common)
     // save regs - x0- x29 this could have happened during pre-emption
-    sub      sp,  sp, #30 * 8
-    stp      x0,  x1, [sp, # 0 * 8]
-    stp      x2,  x3, [sp, # 2 * 8]
-    stp      x4,  x5, [sp, # 4 * 8]
-    stp      x6,  x7, [sp, # 6 * 8]
-    stp      x8,  x9, [sp, # 8 * 8]
-    stp     x10, x11, [sp, #10 * 8]
-    stp     x12, x13, [sp, #12 * 8]
-    stp     x14, x15, [sp, #14 * 8]
-    stp     x16, x17, [sp, #16 * 8]
-    stp     x18, x19, [sp, #18 * 8]
-    stp     x20, x21, [sp, #20 * 8]
-    stp     x22, x23, [sp, #22 * 8]
-    stp     x24, x25, [sp, #24 * 8]
-    stp     x26, x27, [sp, #26 * 8]
-    stp     x28, x29, [sp, #28 * 8]
+    sub       sp,  sp, #30 * 8
+    stp       x0,  x1, [sp, # 0 * 8]
+    stp       x2,  x3, [sp, # 2 * 8]
+    stp       x4,  x5, [sp, # 4 * 8]
+    stp       x6,  x7, [sp, # 6 * 8]
+    stp       x8,  x9, [sp, # 8 * 8]
+    stp      x10, x11, [sp, #10 * 8]
+    stp      x12, x13, [sp, #12 * 8]
+    stp      x14, x15, [sp, #14 * 8]
+    stp      x16, x17, [sp, #16 * 8]
+    stp      x18, x19, [sp, #18 * 8]
+    stp      x20, x21, [sp, #20 * 8]
+    stp      x22, x23, [sp, #22 * 8]
+    stp      x24, x25, [sp, #24 * 8]
+    stp      x26, x27, [sp, #26 * 8]
+    stp      x28, x29, [sp, #28 * 8]
 
-    // save pc, cpsr and vector number
+    // save pc, spsr and vector number
     //ldr      x0, =_tmp
-    adrp     x0, _tmp
-    add      x0,  x0, :lo12:_tmp
-    ldp      x1,  x2, [x0, #0 * 8]
-    ldr      x3, [x0, #2 * 8]
-    str      x1, [sp, #30 * 8]
-    sub      sp,  sp, #16
-    stp      x2,  x3, [sp, # 0 * 8]
+    adrp      x0, _tmp
+    add       x0,  x0, :lo12:_tmp
+    ldp       x1,  x2, [x0, #0 * 8] //pc vector
+    ldr       x3, [x0, #2 * 8] // spsr
+    str       x1, [sp, #30 * 8] // pc
+    sub       sp,  sp, #16
+    stp       x2,  x3, [sp, # 0 * 8]  // vector spsr
 
     // call handler
     mov      x0,  sp
     bl      exc_handler
 
-    // skip vector number
-    //skip cpsr because we should have this saved in spsr
-    add      sp,  x0, #16
-
-    //Superseded by SPSR we think
-    // restore CPSR
-    //pop     {r0}
-    //msr     CPSR, r0
+    // so move out spsr
+    ldr       x1, [sp, #1 * 8]
+    msr SPSR_EL1,  x1
+    add       sp,  sp, #16
+    ldr       x2, [sp, #30 * 8]
+    msr  ELR_EL1,  x2
 
     // restore register
     ldp      x0,  x1, [sp, # 0 * 8]
@@ -194,9 +190,9 @@ BEGIN_FUNC(exc_common)
     ldp     x24, x25, [sp, #24 * 8]
     ldp     x26, x27, [sp, #26 * 8]
     ldp     x28, x29, [sp, #28 * 8]
+    //for in this function and the other function 30 + 2
+    add      sp,  sp, #32 * 8
 
-    add      sp,  sp, #30 * 8
-    // continue execution
     eret
 END_FUNC(exc_common)
 
@@ -210,7 +206,7 @@ _tmp:
     .long       0
     .long       0
 
-    .align     16
+    .align      4
     .space 1024,0
 rctmux_stack:
     .space 512, 0

@@ -24,9 +24,7 @@ namespace m3 {
 struct ExceptionState {
     word_t vector;
     word_t spsr;
-    word_t r[30]; // r0 .. r12
-    word_t lr;
+    word_t r[30]; // r0 .. r29
     word_t pc;
 } PACKED;
-
 }
