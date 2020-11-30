@@ -33,9 +33,13 @@ BEGIN_FUNC(_start)
     orr      x4,  x4, #0x10000000     // enable TEX remap a lil suss
     msr     sctlr_el1, x4
 
+    //TODO Current EL needs to be set properly
+
     // set default stack pointer?
-    //mov      x0, #0xDEADBEE0
-    mov      x0, #0xFFFFFFFFFFFFFFFF
+   //ldr      x0, =#0xDEADBEEF
+    mov      x0, xzr
+    movk     x0, #0xBEEF
+    movk     x0, #0xDEAD, LSL 16
     cmp      x1,  x0
     beq      1f
     mov      sp, #(STACK_TOP - 16)
