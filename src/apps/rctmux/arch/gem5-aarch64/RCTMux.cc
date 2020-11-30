@@ -76,9 +76,10 @@ void init() {
 void wait_for_reset() {
     asm volatile (
         // set idle stack and enable interrupts
-        "ldr      sp, =idle_stack;\n"
+        "adrp     x0, idle_stack;\n"
+        "add      sp,  x0, :lo12:idle_stack;\n"
         "mrs      x0,DAIF;\n"
-        "bic      x0, #1 << 7;\n"
+        "bic      x0,  x0, #1 << 7;\n"
         "msr    DAIF,  x0;\n"
     );
     while(1)
@@ -95,7 +96,7 @@ void *init_state(m3::Exceptions::State *) {
     // don't set the stackpointer in crt0
     state->r[1]     = 0xDEADBEEF;
     state->pc       = senv->entry;
-    state->cpsr     = 0x13;  // supervisor mode
+    state->spsr     = 0x13;  // supervisor mode // Tentatively exchange for DAIF
     state->lr       = 0;
 
     return state;

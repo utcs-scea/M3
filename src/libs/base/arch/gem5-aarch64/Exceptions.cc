@@ -22,21 +22,18 @@
 namespace m3 {
 
 static const char *exNames[] = {
-    /* 0x00 */ "Reset",
-    /* 0x01 */ "Undefined Instruction",
-    /* 0x02 */ "Software Interrupt",
-    /* 0x03 */ "Prefetch Abort",
-    /* 0x04 */ "Data Abort",
-    /* 0x05 */ "Reserved",
-    /* 0x06 */ "IRQ",
-    /* 0x07 */ "FIQ",
+    /* 0x00 */ "Synchronous",
+    /* 0x01 */ "IRQ",
+    /* 0x02 */ "FIQ",
+    /* 0x03 */ "SError",
+    /* 0x04 */ "Bad Handler"
 };
 
 void Exceptions::init() {
     if(env()->isrs) {
         auto funcs = reinterpret_cast<Exceptions::isr_func*>(env()->isrs);
         for(size_t i = 0; i < ARRAY_SIZE(exNames); ++i) {
-            if(i != 6)
+            if(i != 1)
                 funcs[i] = handler;
         }
     }
@@ -57,7 +54,7 @@ void *Exceptions::handler(State *state) {
     ser << "Registers:\n";
     for(size_t i = 0; i < ARRAY_SIZE(state->r); ++i)
         ser << "   r" << fmt(i, "0", 2) << ": " << fmt(state->r[i], "#0x", 8) << "\n";
-    ser << "  cpsr: " << fmt(state->spsr, "#0x", 8) << "\n";
+    ser << "  spsr: " << fmt(state->spsr, "#0x", 8) << "\n";
     ser << "    lr: " << fmt(state->lr, "#0x", 8) << "\n";
 
     env()->exit(1);

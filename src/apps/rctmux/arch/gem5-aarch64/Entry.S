@@ -16,14 +16,6 @@
 
 #include <base/Asm.h>
 
-#define BIT_SHIFT(attr, idx) ((attr) << (idx *8))
-#define MT_DEVICE_nGnRnE    0
-#define MT_DEVICE_nGnRE     1
-#define MT_DEVICE_GRE       2
-#define MT_NORMAL_NC        3
-#define MT_NORMAL           4
-#define MT_NORMAL_WT        5
-
 .extern exc_handler
 .extern init
 .extern sleep
@@ -34,34 +26,45 @@
 BEGIN_FUNC(_start)
     // TODO currently required, because the reset lets us start at the next instruction
     nop
+    nop
+    nop
 
-    mrs     mair_el1, x5 // We grab the NMRR:PRRR
+    mrs      x5, mair_el1 // We grab the NMRR:PRRR
     orr      x5,  x5, #0x00000002 // set tr0 = 0x2 (normal memory)
-    orr      x5,  x5, BIT_SHIFT(#0x00000001, 4) // set ir0 = 0x1 (write-back, write-allocate)
-    orr      x0,  x5, BIT_SHIFT(#0x00010000, 4) // set or0 = 0x1 (write-back, write-allocate)
+    orr      x5,  x5, #0x0000000100000000 // set ir0 = 0x1 (write-back, write-allocate)
+    orr      x5,  x5, #0x0001000000000000 // set or0 = 0x1 (write-back, write-allocate)
     msr     mair_el1, x5 // Set it back into the register
 
-    mrs     sctlr_el1,  x4 // We grab sctrl
+    mrs      x4, sctlr_el1 // We grab sctrl
     orr      x4,  x4, #0x00001000  // enable the I-cache
     orr      x4,  x4, #0x00000004     // enable D-cache
     orr      x4,  x4, #0x10000000     // enable TEX remap a lil suss
-    msr     sctlr_el1,  x4
+    msr     sctlr_el1, x4
 
     // setup stack
-    ldr     sp, =rctmux_stack
+    //equivalent of ldr
+    adrp     x4, rctmux_stack
+    add      sp,  x4, :lo12:rctmux_stack
+
     mov     fp, #0
 
     // perform initialization, if necessary
     bl      init
 
     // enable interrupts and supervisor mode
+    msr    VBAR_EL1, xzr
+    //TODO change this to detect what EL and then move to EL1
     mov      x1, #0x1 // Set EL to el1
-    msr     CurrentEL,  x1
+    //msr    CurrentEL, x1
     mov      x0, #0x0 // Enable interrupts
-    msr     DAIF, x0
+    msr    DAIF, x0
 
     // start idling
-    ldr     lr, =idle
+    //ldr     lr, =idle
+    adrp     lr, idle
+    add      lr,  lr, :lo12:idle
+
+
     ret
 END_FUNC(_start)
 
@@ -73,14 +76,21 @@ END_FUNC(idle)
 .macro BUILD_ENTRY, no
 BEGIN_FUNC(entry_\no)
     // temporarily save lr (old pc)
-    ldr     sp, =_tmp
-    str     lr, [sp]
+    //ldr     sp, =_tmp
+    // we need to create a scratch register -- so we borrow from the unified saves
+    sub      sp,  sp, #02 * 8
+    stp     x28, x29, [sp] //x29 will be used to modify things as the stack pointer was
+    mov     x28, sp //x28 will shadow the stack pointer
+
+    adrp    x29, _tmp
+    add     x29, x29, :lo12:_tmp
+    str     lr, [x29]
     // save the vector number
     mov     lr, #\no
-    str     lr, [sp, #8]
+    str     lr, [x29, #8]
     // save SPSR (old CPRS)
     mrs     lr, SPSR_el1
-    str     lr, [sp, #16]
+    str     lr, [x29, #16]
 
     // switch back to supervisor mode
     //mrs     sp, CPSR
@@ -88,13 +98,17 @@ BEGIN_FUNC(entry_\no)
     //orr     sp, sp, #0x13
     //msr     CPSR, sp
 
-.if \no == 6
+.if \no == 1
     // use the application's stack; leave one slot for the pc
-    sub     sp, sp, #16
+    sub     sp, x29, #16
 .else
     // use our own stack
-    ldr     sp, =rctmux_stack
+    //ldr     sp, =rctmux_stack
+    adrp    x29, rctmux_stack
+    add      sp, x29, :lo12:rctmux_stack
 .endif
+    //load the originals back into the place
+    ldp     x28, x29, [x28]
 
     b       exc_common
 END_FUNC(entry_\no)
@@ -105,8 +119,6 @@ BUILD_ENTRY 1
 BUILD_ENTRY 2
 BUILD_ENTRY 3
 BUILD_ENTRY 4
-BUILD_ENTRY 6
-BUILD_ENTRY 7
 
 BEGIN_FUNC(exc_common)
     // save regs - x0- x29 this could have happened during pre-emption
@@ -128,8 +140,10 @@ BEGIN_FUNC(exc_common)
     stp     x28, x29, [sp, #28 * 8]
 
     // save pc, cpsr and vector number
-    ldr      x0, =_tmp
-    ldp      x1, x2, [x0, #0 * 8]
+    //ldr      x0, =_tmp
+    adrp     x0, _tmp
+    add      x0,  x0, :lo12:_tmp
+    ldp      x1,  x2, [x0, #0 * 8]
     ldr      x3, [x0, #2 * 8]
     str      x1, [sp, #30 * 8]
     sub      sp,  sp, #16
