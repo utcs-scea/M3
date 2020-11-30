@@ -50,7 +50,7 @@ current_el2:
     msr    SPSR_EL2, x3
     eret
 current_el1:
-    mrs     SPSel, xzr
+    msr     SPSel, xzr
 
    // set default stack pointer?
    //ldr      x0, =#0xDEADBEEF

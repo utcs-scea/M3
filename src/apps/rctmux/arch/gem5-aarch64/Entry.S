@@ -59,7 +59,7 @@ current_el2:
     msr    SPSR_EL2, x3
     eret
 current_el1:
-    mrs     SPSel, xzr // keep all stack pointers uniform
+    msr     SPSel, xzr // keep all stack pointers uniform
 
     // setup stack
     //equivalent of ldr
