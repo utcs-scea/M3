@@ -96,9 +96,7 @@ void *init_state(m3::Exceptions::State *) {
     // don't set the stackpointer in crt0
     state->r[1]     = 0xDEADBEEF;
     state->pc       = senv->entry;
-    state->spsr     = 0x13;  // supervisor mode // Tentatively exchange for DAIF
-    state->lr       = 0;
-
+    state->spsr     = 0x0;  // supervisor mode // clear all DAIF flags and setup so that eret will take us to EL0
     return state;
 }
 

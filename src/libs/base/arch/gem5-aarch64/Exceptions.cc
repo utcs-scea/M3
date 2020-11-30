@@ -54,8 +54,8 @@ void *Exceptions::handler(State *state) {
     ser << "Registers:\n";
     for(size_t i = 0; i < ARRAY_SIZE(state->r); ++i)
         ser << "   r" << fmt(i, "0", 2) << ": " << fmt(state->r[i], "#0x", 8) << "\n";
-    ser << "  spsr: " << fmt(state->spsr, "#0x", 8) << "\n";
-    ser << "    lr: " << fmt(state->lr, "#0x", 8) << "\n";
+    ser << "  SPSR_EL1: " << fmt(state->spsr, "#0x", 8) << "\n";
+    ser << "   ELR_EL1: " << fmt(state->pc, "#0x", 8) << "\n";
 
     env()->exit(1);
     return state;
