@@ -210,7 +210,7 @@ _tmp:
     .long       0
     .long       0
 
-    .align     16
+    .align      4
     .space 1024,0
 rctmux_stack:
     .space 512, 0
