@@ -42,6 +42,25 @@ BEGIN_FUNC(_start)
     orr      x4,  x4, #0x10000000     // enable TEX remap a lil suss
     msr     sctlr_el1, x4
 
+    //Setup proper EL state
+    mrs       x1, CurrentEL
+    cmp       x1, #0x1
+    B.EQ      current_el1
+    adr       x2, current_el1
+    mov       x3, #0b0100       // we are definitely using the stack from SP_EL0
+    cmp       x1, #0x2
+    B.EQ      current_el2
+current_el3:
+    msr     ELR_EL3, x2
+    msr    SPSR_EL3, x3
+    eret
+current_el2:
+    msr     ELR_EL2, x2
+    msr    SPSR_EL2, x3
+    eret
+current_el1:
+    mrs     SPSel, xzr // keep all stack pointers uniform
+
     // setup stack
     //equivalent of ldr
     adrp     x4, rctmux_stack
@@ -54,11 +73,7 @@ BEGIN_FUNC(_start)
 
     // enable interrupts and supervisor mode
     msr    VBAR_EL1, xzr
-    //TODO change this to detect what EL and then move to EL1
-    mov      x1, #0x1 // Set EL to el1
-    //msr    CurrentEL, x1
-    mov      x0, #0x0 // Enable interrupts
-    msr    DAIF, x0
+    msr    DAIF, xzr
 
     // start idling
     //ldr     lr, =idle

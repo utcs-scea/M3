@@ -34,8 +34,25 @@ BEGIN_FUNC(_start)
     msr     sctlr_el1, x4
 
     //TODO Current EL needs to be set properly
+    mrs       x1, CurrentEL
+    cmp       x1, #0x1
+    B.EQ      current_el1
+    adr       x2, current_el1
+    mov       x3, #0b0100       // we are definitely using the stack from SP_EL0
+    cmp       x1, #0x2
+    B.EQ      current_el2
+current_el3:
+    msr     ELR_EL3, x2
+    msr    SPSR_EL3, x3
+    eret
+current_el2:
+    msr     ELR_EL2, x2
+    msr    SPSR_EL2, x3
+    eret
+current_el1:
+    mrs     SPSel, xzr
 
-    // set default stack pointer?
+   // set default stack pointer?
    //ldr      x0, =#0xDEADBEEF
     mov      x0, xzr
     movk     x0, #0xBEEF
