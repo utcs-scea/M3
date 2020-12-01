@@ -3,4 +3,5 @@
 	url = os.inf.tu-dresden.de:/home/nils/tomahawk.git
 [submodule "hw/gem5"]
 	path = hw/gem5
-	url = https://github.com/TUD-OS/gem5-dtu.git
+  branch = master
+	url = https://github.com/utscea/gem5-dtu.git
