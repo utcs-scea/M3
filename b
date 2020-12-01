@@ -42,7 +42,7 @@ if [ "$M3_TARGET" = "host" ] || [ "$M3_TARGET" = "gem5" ]; then
     if [ "$M3_ISA" = "arm" ]; then
         crossprefix='arm-none-eabi-'
     elif [ "$M3_ISA" = "aarch64" ]; then
-        crossprefix='aarch64-none-eabi-'
+        crossprefix='aarch64-none-elf-'
     else
         crossprefix=''
     fi
@@ -321,7 +321,7 @@ case "$cmd" in
             if [ "$M3_ISA" = "x86_64" ] && hash rust-gdb 2>/dev/null; then
                 rust-gdb --tui $bindir/${cmd#dbg=} --command=$gdbcmd
             else
-                ${crossprefix}gdb --tui $bindir/${cmd#dbg=} --command=$gdbcmd
+                gdb-multiarch --tui $bindir/${cmd#dbg=} --command=$gdbcmd
             fi
             killall -9 gem5.opt
             rm $gdbcmd
